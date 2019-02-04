@@ -2,6 +2,9 @@
 
 const dashboardController = (EventWBGS) => {
 
+    // Services
+    const controllerServices = require('./controllersServices')(EventWBGS);
+
     const getDashboard = (req, res, next) => {
 
         try {
@@ -22,31 +25,18 @@ const dashboardController = (EventWBGS) => {
 
             } else {
 
-                const { pageNum, limit } = req.query;
-                const startingDoc = parseInt((pageNum - 1) * limit) || 1;
-                const itemsPerPage = parseInt(limit) || 10;
+                // retrieve info from the query string for pagination
+                let { pageNum, limit } = req.query;
+                pageNum = parseInt(pageNum);
+                limit = parseInt(limit);
 
-                // get all events
-                EventWBGS.find()
-                    // where denied is not equal to true
-                    .where('criteria.denied').ne(true)
-                    // filter out the event_id, organisation, full name, and created at fields
-                    .select('_id host.organisation host.first_name host.last_name createdAt criteria.shortlisted')
-                    // sort by created_at, with most recent at the top
-                    .sort('-createdAt')
-                    // filter by items per page, from a starting document
-                    .slice([startingDoc, itemsPerPage])
-                    // handle query data
-                    .exec((err, events) => {
-                        // if error, handle error
-                        if (err) return next(err);
-
-                        // log success
-                        console.log(`${events.length} events retrieved from collection`);
-
+                // get events cards
+                controllerServices.dashboardCards({ 'criteria.denied': { $ne: true } }, pageNum, limit)
+                    .then((eventsCards) => {
                         // send response of all events as json
-                        res.json({ data: events, length: events.length });
+                        res.json(eventsCards);
                     });
+
             };
 
         } catch (error) {
@@ -91,32 +81,16 @@ const dashboardController = (EventWBGS) => {
 
         try {
 
-            const { pageNum, limit } = req.query;
-            const startingDoc = parseInt((pageNum - 1) * limit) || 1;
-            const itemsPerPage = parseInt(limit) || 10;
+            // retrieve info from the query string for pagination
+            let { pageNum, limit } = req.query;
+            pageNum = parseInt(pageNum);
+            limit = parseInt(limit);
 
-            // get all events on the shortlist
-            EventWBGS.find()
-                // where denied is not equal to true
-                .where('criteria.denied').ne(true)
-                // where shortlist is true
-                .where('criteria.shortlisted').equals(true)
-                // filter out the event_id, organisation, full name, and created at fields
-                .select('_id host.organisation host.first_name host.last_name createdAt criteria.shortlisted')
-                // sort by created_at, with most recent at the top
-                .sort('-createdAt')
-                // filter by items per page, from a starting document
-                .slice([startingDoc, itemsPerPage])
-                // handle query data
-                .exec((err, shortlist) => {
-                    // if error, handle error
-                    if (err) return next(err);
-
-                    // log success
-                    console.log(`${shortlist.length} events retrieved from collection for shortlist`);
-
+            // get shortlist cards
+            controllerServices.dashboardCards({ 'criteria.denied': { $ne: true }, 'criteria.shortlisted': true }, pageNum, limit)
+                .then((shortlistCards) => {
                     // send response of all events as json
-                    res.json({ data: shortlist, length: shortlist.length });
+                    res.json(shortlistCards);
                 });
 
         }
