@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const axios = require('axios');
 
 // models
 const { User } = require('../../models/User');
@@ -30,7 +31,11 @@ mongoose.connect(testDbConn, (err) => {
 });
 
 // Testing
-
+test('GET to "/dashboard"', async () => {
+    const response = await axios.post("http://localhost:3000/users/login", { email: "foo@test.com", password: "12345" })
+        .then(await axios.get("http://localhost:3000/dashboard"));
+    expect(response.status).toBe(200);
+});
 
 // Reset app environment 
 process.env.NODE_ENV = currentAppEnvironment;

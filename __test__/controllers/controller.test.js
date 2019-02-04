@@ -1,7 +1,7 @@
 // Controllers
-const eoiController = require('../eoiController');
-const dashboardController = require('../dashboardController');
-const usersController = require('../usersController');
+const eoiController = require('../../controllers/eoiController');
+const dashboardController = require('../../controllers/dashboardController');
+const usersController = require('../../controllers/usersController');
 
 // set up mock Models to pass into controller tests
 function User() {
