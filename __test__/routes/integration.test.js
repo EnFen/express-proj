@@ -1,42 +1,26 @@
-const mongoose = require('mongoose');
-const axios = require('axios');
+require('dotenv').config();
+const app = require('../../bin/www');
+const request = require('supertest');
+const authenticatedUser = request.agent(app);
 
-// models
-const { User } = require('../../models/User');
-const { Host } = require('../../models/Host');
-const { Criteria } = require('../../models/Criteria');
-const EventWBGS = require('../../models/EventWBGS');
+// setup authenticated user for testing authenticated routes
+beforeEach((done) => {
+    authenticatedUser
+        .post('/users/login')
+        .send({
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD
+        })
+        .end((err, response) => {
+            expect(response.statusCode).toBe(200);
+            done();
+        });
 
-// controllers
-const eoiController = require('../../controllers/eoiController')(User, Host, Criteria, EventWBGS);
-const dashboardController = require('../../controllers/dashboardController')(EventWBGS);
-const usersController = require('../../controllers/usersController')(User);
-
-// Store current app environment
-let currentAppEnvironment = process.env.NODE_ENV;
-
-// Set test environment
-process.env.NODE_ENV = "test";
-
-// Database connection
-const testDbConn = `mongodb://localhost/real-world-test`;
-
-// Initilise mongoose
-mongoose.connect(testDbConn, (err) => {
-    if (err) {
-        console.log('Error connecting to test database', err);
-    } else {
-        console.log(`Connected to test database!`);
-    }
 });
 
-// Testing
-test('GET to "/dashboard"', async () => {
-    const response = await axios.post("http://localhost:3000/users/login", { email: "foo@test.com", password: "12345" })
-        .then(await axios.get("http://localhost:3000/dashboard"));
+
+// TESTS
+test('GET to /dashboard returns a 200 response', async () => {
+    const response = await authenticatedUser.get('/dashboard');
     expect(response.status).toBe(200);
 });
-
-// Reset app environment 
-process.env.NODE_ENV = currentAppEnvironment;
-

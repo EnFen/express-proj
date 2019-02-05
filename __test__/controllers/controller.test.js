@@ -21,25 +21,17 @@ function Criteria() {
 function EventWBGS() {
     this.save = () => { };
     this.validate = () => { };
-    this.find = () => { };
-    this.where = () => { };
-    this.countDocuments = () => { };
-    this.select = () => { };
-    this.equals = () => { };
-    this.ne = () => { };
-    this.sort = () => { };
-    this.skip = () => { };
-    this.limit = () => { };
-    this.findById = () => { };
-    this.findByIdAndUpdate = () => { };
 };
 
-// set up middleware variables
+// set up mock middleware variables
 let req = { body: {}, params: {}, query: { pageNum: 1, limit: 10 } };
 let res = {
     status: null,
     send: null,
-    json: jest.fn(() => 'json method called')
+    json: jest.fn((data) => {
+        console.log('in res.json');
+        return ('json method called', data);
+    })
 };
 let next = jest.fn((err) => {
     console.log('in mock next');
@@ -55,7 +47,6 @@ test('eoiController calls "next" middleware after POST request', () => {
 
     // run test function
     eoiController(User, Host, Criteria, EventWBGS).post(req, res, next);
-
     // Define results expected from test
     expect(next).toBeCalled();
     expect(next).toHaveReturnedWith('request passed to next middleware');
@@ -65,21 +56,8 @@ test('eoiController calls "next" middleware after POST request', () => {
 // test('dashboardController responds with json object on GET request passed without params', () => {
 
 //     // run test function
-//     dashboardController(EventWBGS).getDashboard(req, res, next);
-
+//     dashboardController(EventWBGS).getEvents(req, res, next);
 //     // Define results expected from test
 //     expect(res.json).toBeCalled();
-//     expect(res.json).toHaveReturnedWith('json method called');
-// });
-
-// // USER CONTROLLER TESTS
-// test('userController calls "next" middleware after POST request', () => {
-
-//     // run test function
-//     eoiController(User, Host, EventWBGS).post(req, res, next);
-
-//     // Define results expected from test
-//     expect(next).toBeCalled();
-//     expect(next).toHaveReturnedWith('request passed to next middleware');
 // });
 
