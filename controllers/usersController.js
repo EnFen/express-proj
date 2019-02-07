@@ -45,29 +45,28 @@ const usersController = (User) => {
         };
     };
 
-    const verifyUserToken = (req, res, next) => {
-        console.log(req.headers)
-        if (!req.headers.user || req.headers.user === 'null') {
-            // set default user role to session
-            req.session.role = 'guest';
-            next();
-        } else {
-            // find user in header and add user role to session
-            User.find({ email: req.headers.user }).select('role')
-                .exec((err, user) => {
-                    if (err) return next(err);
-                    console.log(req.headers.user)
-                    req.session.role = user[0].role || 'guest';
-                    next();
-                });
-        }
-    }
+    const userSession = (req, res, next) => {
+
+        try {
+            if (!req.user || req.user === 'null') {
+                // set session user role to default 
+                req.session.role = 'guest';
+                next();
+            } else {
+                // set user role to authorised user role
+                req.session.role = req.user.role || 'guest';
+                next();
+            };
+        } catch (error) {
+            next(error);
+        };
+    };
 
     return {
         postRegister,
         postLogin,
         getLogout,
-        verifyUserToken
+        userSession
     };
 };
 

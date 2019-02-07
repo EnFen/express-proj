@@ -2,15 +2,12 @@ require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-// const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const acl = require('express-acl');
-// const verifyUserRole = require('./middleware/verification/verifyUserRole');
-
 
 // models
 const { User } = require('./models/User');
@@ -43,9 +40,22 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: false
 }));
-// app.use(cookieParser());
+
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
+
+// Configure CORS
+const corsOptions =
+  app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+
+// Use sessions
+app.use(session({
+  secret: "Well that's just, like, your opinion, man."
+}));
+
+// Initialise Passport and connect it into the Express pipeline
+app.use(passport.initialize());
+// Connect Passport to the session
+app.use(passport.session());
 
 // Use strategy defined in User model to set authentication strategy - currently local strategy
 passport.use(User.createStrategy());
@@ -54,15 +64,8 @@ passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// Use sessions
-app.use(session({
-  secret: "Well that's just, like, your opinion, man.",
-}));
-
-// Initialise Passport and connect it into the Express pipeline
-app.use(passport.initialize());
-// Connect Passport to the session
-app.use(passport.session());
+// apply user role for session
+app.use(usersController.userSession);
 
 // Initilise mongoose
 mongoose.connect(dbConn, (err) => {
@@ -72,9 +75,6 @@ mongoose.connect(dbConn, (err) => {
     console.log(`Connected to database!`);
   }
 });
-
-// verify user role
-app.use(usersController.verifyUserToken);
 
 // Configure acl for authorisation
 acl.config({
@@ -112,8 +112,6 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.send(err.message);
 
-  // render the error page
-  // res.render('error');
 });
 
 module.exports = app;
