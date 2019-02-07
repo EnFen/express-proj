@@ -49,7 +49,7 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'PUT', 'POST', 'OPTIONS']
 };
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+app.use(cors(corsOptions));
 
 // Use sessions
 app.use(session({
