@@ -44,8 +44,12 @@ app.use(express.urlencoded({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure CORS
-const corsOptions =
-  app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+const corsOptions = {
+  origin: app.settings.env === 'production' ? 'https://react-app-ca.herokuapp.com/' : ['http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'PUT', 'POST', 'OPTIONS']
+};
+app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
 
 // Use sessions
 app.use(session({
