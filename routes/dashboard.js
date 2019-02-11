@@ -12,12 +12,11 @@ const dashboardRoutes = (EventWBGS) => {
     // controllers - transport data to/from dB
     const dashboardController = require('../controllers/dashboardController')(EventWBGS);
 
-
     // endpoints
     // --- requests made to /dashboard ---
     dashboardRouter.route('/')
         .get(
-            dashboardController.getDashboard
+            dashboardController.getEvents
         );
 
     // --- requests made to /dashboard/shortlist ---
@@ -29,11 +28,11 @@ const dashboardRoutes = (EventWBGS) => {
 
     dashboardRouter.route('/:id')
         .get(
-            dashboardController.getDashboard
+            dashboardController.getEvents
         )
         .put(
             requestValidation('admin'),
-            dashboardController.updateDashboard,
+            dashboardController.updateEvent,
             deniedEmail,
             clientResponse.send('An email has been sent to the prospective host explaining reason for denial.')
         );

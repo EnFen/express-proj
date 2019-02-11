@@ -44,7 +44,7 @@ const criteriaSchema = new Schema({
         required: true,
         default: 'uncategorised'
     }
-}, { timestamps: true });
+});
 
 // Create EventCriterion model
 const Criteria = mongoose.model('Criteria', criteriaSchema);

@@ -2,7 +2,7 @@
 
 const eoiController = (User, Host, Criteria, EventWBGS) => {
 
-    const post = async (req, res, next) => {
+    const post = (req, res, next) => {
         try {
 
             // destructure request
@@ -51,14 +51,14 @@ const eoiController = (User, Host, Criteria, EventWBGS) => {
             });
 
             // validate data for all entries before saving to dB
-            await newUser.validate();
-            await newHost.validate();
-            await newEvent.validate();
+            newUser.validate();
+            newHost.validate();
+            newEvent.validate();
 
             // save data to dB
-            await newUser.save();
-            await newHost.save();
-            await newEvent.save();
+            newUser.save();
+            newHost.save();
+            newEvent.save();
 
             // If validation and save successful, send to next middleware
             next();

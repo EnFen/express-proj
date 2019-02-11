@@ -2,7 +2,10 @@
 
 const dashboardController = (EventWBGS) => {
 
-    const getDashboard = (req, res, next) => {
+    // Services
+    const controllerServices = require('./controllerServices')(EventWBGS);
+
+    const getEvents = (req, res, next) => {
 
         try {
             if (req.params.id) {
@@ -22,52 +25,18 @@ const dashboardController = (EventWBGS) => {
 
             } else {
 
+                // retrieve info from the query string for pagination
                 let { pageNum, limit } = req.query;
                 pageNum = parseInt(pageNum);
                 limit = parseInt(limit);
 
-                // for all events
-                EventWBGS
-                    // where denied is not equal to true
-                    .where('criteria.denied').ne(true)
-                    // get count
-                    .countDocuments()
-                    // handle query
-                    .exec((err, count) => {
-                        // if error, handle error
-                        if (err) return next(err);
-
-                        // set up pagination variables
-                        let startingDoc = !pageNum || pageNum < 0 ? 0 : (pageNum - 1) * limit; //defaults to 0
-                        let itemsPerPage;
-                        if (limit >= count) {
-                            itemsPerPage = count;
-                        } else if (!limit || limit <= 0) {
-                            itemsPerPage = 10; // defaults to 10
-                        };
-
-                        // then, get all event data
-                        EventWBGS.find()
-                            // where denied is not equal to true
-                            .where('criteria.denied').ne(true)
-                            // filter out the event_id, organisation, full name, and created at fields
-                            .select('_id host.organisation host.first_name host.last_name createdAt criteria.shortlisted')
-                            // sort by created_at, with most recent at the top
-                            .sort('-createdAt')
-                            // filter by items per page, from a starting document
-                            .skip(startingDoc).limit(itemsPerPage)
-                            // handle query data
-                            .exec((err, events) => {
-                                // if error, handle error
-                                if (err) return next(err);
-
-                                // log success
-                                console.log(`${events.length} of ${count} events retrieved from collection`);
-
-                                // send response of all events as json
-                                res.json({ data: events, count });
-                            });
+                // get events cards
+                controllerServices.dashboardCards({ 'criteria.denied': { $ne: true } }, pageNum, limit)
+                    .then((eventsCards) => {
+                        // send response of all events as json
+                        res.json(eventsCards);
                     });
+
             };
 
         } catch (error) {
@@ -75,7 +44,7 @@ const dashboardController = (EventWBGS) => {
         };
     };
 
-    const updateDashboard = (req, res, next) => {
+    const updateEvent = (req, res, next) => {
         // updates criteria model embedded in event model with data from the request body. These data include:
         // socials_check, description_check, volunteers_check, target_value_check, location_check, best_date_check, 
         // key_influencers_check, shortlisted, denied, denied_reason,
@@ -112,55 +81,16 @@ const dashboardController = (EventWBGS) => {
 
         try {
 
+            // retrieve info from the query string for pagination
             let { pageNum, limit } = req.query;
             pageNum = parseInt(pageNum);
             limit = parseInt(limit);
 
-            // for all events on the shortlist
-            EventWBGS
-                // where denied is not equal to true
-                .where('criteria.denied').ne(true)
-                // where shortlist is true
-                .where('criteria.shortlisted').equals(true)
-                // get count
-                .countDocuments()
-                // handle query
-                .exec((err, count) => {
-                    // if error, handle error
-                    if (err) return next(err);
-
-                    // set up pagination variables
-                    let startingDoc = !pageNum || pageNum < 0 ? 0 : (pageNum - 1) * limit; //defaults to 0
-                    let itemsPerPage;
-                    if (limit >= count) {
-                        itemsPerPage = count;
-                    } else if (!limit || limit <= 0) {
-                        itemsPerPage = 10; // defaults to 10
-                    };
-
-                    // then, get all event data on the shortlist
-                    EventWBGS.find()
-                        // where denied is not equal to true
-                        .where('criteria.denied').ne(true)
-                        // where shortlist is true
-                        .where('criteria.shortlisted').equals(true)
-                        // filter out the event_id, organisation, full name, and created at fields
-                        .select('_id host.organisation host.first_name host.last_name createdAt criteria.shortlisted')
-                        // sort by created_at, with most recent at the top
-                        .sort('-createdAt')
-                        // filter by items per page, from a starting document
-                        .skip(startingDoc).limit(itemsPerPage)
-                        // handle query data
-                        .exec((err, shortlist) => {
-                            // if error, handle error
-                            if (err) return next(err);
-
-                            // log success
-                            console.log(`${shortlist.length} of ${count} events retrieved from collection`);
-
-                            // send response of all events as json
-                            res.json({ data: shortlist, count });
-                        });
+            // get shortlist cards
+            controllerServices.dashboardCards({ 'criteria.denied': { $ne: true }, 'criteria.shortlisted': true }, pageNum, limit)
+                .then((shortlistCards) => {
+                    // send response of all shortlisted events as json
+                    res.json(shortlistCards);
                 });
 
         }
@@ -170,8 +100,8 @@ const dashboardController = (EventWBGS) => {
     };
 
     return {
-        getDashboard,
-        updateDashboard,
+        getEvents,
+        updateEvent,
         getShortlist
     };
 };

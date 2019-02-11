@@ -1,4 +1,4 @@
-const clientResponse = require('../clientResponse');
+const clientResponse = require('../../../middleware/res/clientResponse');
 
 test('sends response with status 200, and a confirmation message', () => {
     // set up variables for send mesage
