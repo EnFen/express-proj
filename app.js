@@ -2,7 +2,6 @@ require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-// const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 const session = require('express-session');
@@ -22,6 +21,9 @@ const usersRouter = require('./routes/users')(User);
 const eoiRouter = require('./routes/expression_of_interest')(User, Host, Criteria, EventWBGS);
 const dashboardRouter = require('./routes/dashboard')(EventWBGS);
 
+// custom middleware
+const usersController = require('./controllers/usersController')(User);
+
 const app = express();
 
 // Database connection 
@@ -38,9 +40,26 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: false
 }));
-// app.use(cookieParser());
+
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
+
+// Configure CORS
+const corsOptions = {
+  origin: app.settings.env === 'production' ? 'https://react-app-ca.herokuapp.com/' : ['http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'PUT', 'POST', 'OPTIONS']
+};
+app.use(cors(corsOptions));
+
+// Use sessions
+app.use(session({
+  secret: "Well that's just, like, your opinion, man."
+}));
+
+// Initialise Passport and connect it into the Express pipeline
+app.use(passport.initialize());
+// Connect Passport to the session
+app.use(passport.session());
 
 // Use strategy defined in User model to set authentication strategy - currently local strategy
 passport.use(User.createStrategy());
@@ -49,15 +68,8 @@ passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// Use sessions
-app.use(session({
-  secret: "Well that's just, like, your opinion, man.",
-}));
-
-// Initialise Passport and connect it into the Express pipeline
-app.use(passport.initialize());
-// Connect Passport to the session
-app.use(passport.session());
+// apply user role for session
+app.use(usersController.userSession);
 
 // Initilise mongoose
 mongoose.connect(dbConn, (err) => {
